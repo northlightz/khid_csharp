@@ -10,4 +10,9 @@
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="HtmlAgilityPack" Version="1.6.13" />
+    <PackageReference Include="HtmlAgilityPack.CssSelectors" Version="1.0.2" />
+  </ItemGroup>
+
 </Project>

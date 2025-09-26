@@ -41,7 +41,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./publish/linux
+        asset_path: ./publish/khid_csharp-linux
         asset_name: khid_csharp-linux.zip
         asset_content_type: application/zip
 
@@ -51,6 +51,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./publish/windows
+        asset_path: ./publish/khid_csharp-windows
         asset_name: khid_csharp-windows.zip
         asset_content_type: application/zip

@@ -32,6 +32,8 @@ jobs:
 
     - name: Upload Linux build
       uses: actions/upload-release-asset@v1
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./publish/linux
@@ -40,6 +42,8 @@ jobs:
 
     - name: Upload Windows build
       uses: actions/upload-release-asset@v1
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./publish/windows

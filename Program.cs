@@ -2,20 +2,19 @@
 
 namespace khinsider_scraper_c_;
 
-class Program
+internal abstract class Program
 {
-    static readonly HtmlWeb Scraper = new();
-    static readonly HttpClient Client = new();
+    private static readonly HtmlWeb Scraper = new();
+    private static readonly HttpClient Client = new();
 
-    static async Task Main(string[] args)
+    private static async Task Main(string[] args)
     {
-        List<string> InitalPageContent;
-        List<string> DownloadPageContent = [];
+        List<string> downloadPageContent = [];
 
         if (args.Length > 0)
         {
-            InitalPageContent = await InitialPageScrape(args[0]);
-            DownloadPageContent = await DownloadPageScrape(InitalPageContent);
+            var initialPageContent = await InitialPageScrape(args[0]);
+            downloadPageContent = await DownloadPageScrape(initialPageContent);
         }
         else
         {
@@ -26,14 +25,14 @@ class Program
             Environment.Exit(1);
         }
 
-        foreach (string link in DownloadPageContent)
+        foreach (var link in downloadPageContent)
         {
-            string filename = Uri.UnescapeDataString(link.Split('/')[6]);
+            var filename = Uri.UnescapeDataString(link.Split('/')[6]);
 
             while (true)
             {
                 Console.Write($"Download |{filename}| y/n/q?   ");
-                string input = Console.ReadLine()?.Trim().ToLower() ?? "q";
+                var input = Console.ReadLine()?.Trim().ToLower() ?? "q";
 
                 switch (input)
                 {
@@ -56,45 +55,40 @@ class Program
         }
     }
 
-    static async Task<List<string>> InitialPageScrape(string initial_page)
+    private static async Task<List<string>> InitialPageScrape(string initialPage)
     {
-        List<string> a_tags = [];
-        HtmlDocument page = await Scraper.LoadFromWebAsync(initial_page);
-        HtmlNodeCollection td_tags = page.DocumentNode.SelectNodes(
+        List<string> aTags = [];
+        var page = await Scraper.LoadFromWebAsync(initialPage);
+        var tdTags = page.DocumentNode.SelectNodes(
             "//td[contains(concat(' ', normalize-space(@class), ' '), ' playlistDownloadSong ')]"
         );
-        foreach (
-            string td_tag in td_tags
-                .SelectMany(td => td.SelectNodes(".//a") ?? Enumerable.Empty<HtmlNode>())
-                .Select(a => a.GetAttributeValue("href", ""))
-        )
-        {
-            a_tags.Add($"https://downloads.khinsider.com{td_tag}");
-        }
-        return a_tags;
+        aTags.AddRange(tdTags.SelectMany(td => td.SelectNodes(".//a") ?? Enumerable.Empty<HtmlNode>())
+            .Select(a => a.GetAttributeValue("href", ""))
+            .Select(tdTag => $"https://downloads.khinsider.com{tdTag}"));
+        return aTags;
     }
 
-    static async Task<List<string>> DownloadPageScrape(List<string> hrefs)
+    private static async Task<List<string>> DownloadPageScrape(List<string> hrefs)
     {
-        List<string> download_links = [];
+        List<string> downloadLinks = [];
         IEnumerable<Task<IEnumerable<string>>> tasks = hrefs.Select(async href =>
         {
-            HtmlDocument page = await Scraper.LoadFromWebAsync(href);
-            IEnumerable<HtmlNode> a_tags =
+            var page = await Scraper.LoadFromWebAsync(href);
+            var aTags =
                 page.DocumentNode.SelectNodes("//a") ?? Enumerable.Empty<HtmlNode>();
 
-            return a_tags
+            return aTags
                 .Select(a => a.GetAttributeValue("href", ""))
                 .Where(link => link.EndsWith(".flac", StringComparison.OrdinalIgnoreCase));
         });
-        IEnumerable<string>[] results = await Task.WhenAll(tasks);
+        var results = await Task.WhenAll(tasks);
 
-        foreach (IEnumerable<string> flacLinks in results)
+        foreach (var flacLinks in results)
         {
-            download_links.AddRange(flacLinks);
+            downloadLinks.AddRange(flacLinks);
         }
 
-        return download_links;
+        return downloadLinks;
     }
 
     static async Task DownloadFileAsync(
@@ -103,8 +97,8 @@ class Program
         CancellationToken cancellationToken = default
     )
     {
-        await using Stream file_steam = await Client.GetStreamAsync(fileUrl, cancellationToken);
-        await using FileStream io_manager = new(
+        await using var fileSteam = await Client.GetStreamAsync(fileUrl, cancellationToken);
+        await using FileStream ioManager = new(
             fileName,
             FileMode.Create,
             FileAccess.Write,
@@ -112,7 +106,7 @@ class Program
             8196,
             true
         );
-        await file_steam.CopyToAsync(io_manager, cancellationToken);
-        await io_manager.FlushAsync(cancellationToken);
+        await fileSteam.CopyToAsync(ioManager, cancellationToken);
+        await ioManager.FlushAsync(cancellationToken);
     }
 }
